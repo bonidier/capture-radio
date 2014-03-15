@@ -21,6 +21,13 @@ a-Uniq-tag5|http://url_to_your_prefered_radio5_stream
 
 # usage
 
+- get embedded help :
+
+```
+ ./capture-radio.sh
+ ./capture-radio.sh -h
+```
+
 - get available tags (radios list) :
 
 ```
