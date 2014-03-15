@@ -373,7 +373,7 @@ streaming capture in progress in : $WKFILE
 capture duration : $CAPTURE_TIME seconds
 EOF
 
-  $CMD_WGET -c --timeout=3 ${CAPTURE_RADIO_STREAMING} -O${WKFILE}  &
+  $CMD_WGET -c --timeout=3 ${CAPTURE_RADIO_STREAMING} -O${WKFILE} -o/dev/null &
   _WGET_PID=$!
 
   echo "wget_pid=$_WGET_PID"

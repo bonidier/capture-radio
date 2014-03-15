@@ -54,7 +54,7 @@ a-Uniq-tag5|http://url_to_your_prefered_radio5_stream
 |directory|description|
 |---|---|
 | **captured/** | final destination for your captures |
-  - **db/** | cache for playlist and streams, to download playlist only if needed |
+| **db/** | cache for playlist and streams, to download playlist only if needed |
 | **logs/** | not used, you can store script output here |
 | **working/** | temporary capture file storage during download |
   
