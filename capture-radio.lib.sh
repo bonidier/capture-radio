@@ -27,6 +27,31 @@ CAPTURE_VERSION=1.0
 # otherwise, the capture will continue indefitely...
 trap capture_onexit SIGINT TERM
 
+#
+# convert input value to seconds
+# usage : capture_time_to_seconds [0-9]+[hms|]
+# echo converted value
+#
+function capture_time_to_seconds
+{
+  local val=$1
+  local multiply=
+
+  # get numeric value
+  local valonly=$(echo $val | egrep -o '^[0-9]+')
+  # get last char if the input value
+  local lastchar=$(echo $val | egrep -o ".$")
+
+  case $lastchar in
+    h) multiply=3600;;
+    m) multiply=60;;
+    *) multiply=1;;
+  esac
+
+  echo $((valonly * multiply))
+}
+
+
 function capture_onexit
 {
   echo -e "\n\n /!\ trapped, stopping capture NOW ! /!\\\ \n"
@@ -49,6 +74,16 @@ CAPTURE-RADIO $CAPTURE_VERSION
 * current help :
   $0 -h
 
+* options with arguments : 
+
+  -t : uniq tag name for a radio, should match '-a-zA-Z0-9_' to be catched
+  -d : capture duration (seconds by default)
+     if you need a long capture time,
+     you can suffix value with one of these units : h,m,s (for hours,minutes,seconds)
+     example : 10m
+
+  -s : stream number to capture if your defined playlist containing many streams
+
 * get available tags (radios list) :
   $0 -l
 
@@ -56,15 +91,15 @@ CAPTURE-RADIO $CAPTURE_VERSION
   $0 -t [radio_tag]
 
 * launch capture of a radio :
-  $0 -t [radio_tag] -d [capture duration in seconds]
+  $0 -t [radio_tag] -d [capture duration]
 
-  if the radio's playlist has more than one stream, will show them instead of starting
+  if the radio's playlist has many streams, will show them instead of starting
 
 * launch capture of a defined radio's stream :
-  $0 -t [radio_tag] -d [capture duration in seconds] -s [stream_number]
+  $0 -t [radio_tag] -d [capture duration] -s [stream_number]
 
 EOF
-  exit
+  exit 1
 }
 
 function capture_get_streams
@@ -82,11 +117,11 @@ function capture_get_streams
 
   # it's a playlist 
   if [ ! -z "$pl_ext" ]; then
-     # that should be a playlist
-     pl_hash=$(echo $radio_url|md5sum|cut -d ' ' -f1)
-     pl_cache_file=$DB_DIR/${pl_hash}.url
-     pl_cache_streams=$DB_DIR/${pl_hash}.streams
-     echo $pl_file
+    # that should be a playlist
+    pl_hash=$(echo $radio_url|md5sum|cut -d ' ' -f1)
+    pl_cache_file=$DB_DIR/${pl_hash}.url
+    pl_cache_streams=$DB_DIR/${pl_hash}.streams
+
     if [ ! -f "$pl_cache_file" ]; then
       # removing CR from windows server remote files if necessary
       $CMD_WGET $radio_url -q -O- | tr -d '\r' > ${pl_cache_file}
@@ -278,9 +313,14 @@ function capture_bootstrap
   capture_get_streams $CAPTURE_RADIO_URL $CAPTURE_STREAM_ID
   # if capture time defined, check value validity
   if [ ! -z "$CAPTURE_TIME" ]; then
-    if [[ ! $CAPTURE_TIME =~ ^[0-9]+$ ]]; then
-      capture_echo_fail "capture time should be numeric value"
+    # unit can be in hour, minutes, or seconds
+    # (seconds if no unit)
+    if [[ ! $CAPTURE_TIME =~ ^[0-9]+[hms]?$ ]]; then
+      capture_echo_fail "capture time is invalid, check help"
       return 1
+    else
+      # set the unit to seconds if nothing, only for debug output about time to capture
+      [[ $CAPTURE_TIME =~ ^[0-9]+$ ]] && CAPTURE_TIME=${CAPTURE_TIME}s
     fi
   else
      # if no capture time defined, just want get streams in playlist
@@ -296,8 +336,11 @@ function capture_bootstrap
   # current time in timestamp
   local ts_now=
 
+  # convert input capture-time to seconds
+  local ctime_seconds=$(capture_time_to_seconds $CAPTURE_TIME)
+
   ts_start=$(date +%s)
-  let ts_end=$ts_start+$CAPTURE_TIME
+  let ts_end=$ts_start+$ctime_seconds
 
    # if failing to start, url is missing, stopping now !
   capture_start || return 1
@@ -329,7 +372,7 @@ function capture_bootstrap
        capture_start
     else
        # progression inline :-)
-       percent=$(($elapsed * 100 / $CAPTURE_TIME))
+       percent=$(($elapsed * 100 / $ctime_seconds))
        echo -n  "progression:$(printf "%02d%%" $percent) [time spent : elapsed=$elapsed / remaining=$remaining ]"
 
        if [ $remaining -gt 0 ]; then
@@ -370,7 +413,7 @@ buffer file : $WKFILE
 playlist address : '$CAPTURE_RADIO_URL'
 getting sound from address : '$CAPTURE_RADIO_STREAMING'
 streaming capture in progress in : $WKFILE
-capture duration : $CAPTURE_TIME seconds
+capture duration : $CAPTURE_TIME
 EOF
 
   $CMD_WGET -c --timeout=3 ${CAPTURE_RADIO_STREAMING} -O${WKFILE} -o/dev/null &

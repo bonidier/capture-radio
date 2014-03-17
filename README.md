@@ -28,6 +28,17 @@ a-Uniq-tag5|http://url_to_your_prefered_radio5_stream
  ./capture-radio.sh -h
 ```
 
+- options with arguments :
+
+  * -t : uniq tag name for a radio, should match '-a-zA-Z0-9_' to be catched
+  * -d : capture duration (seconds by default)
+     if you need a long capture time,
+     you can suffix value with one of these units : h,m,s (for hours,minutes,seconds)
+     example : 10m
+
+  * -s : stream number to capture if your defined playlist containing many streams
+
+
 - get available tags (radios list) :
 
 ```
@@ -43,15 +54,15 @@ a-Uniq-tag5|http://url_to_your_prefered_radio5_stream
 - launch capture of a radio :
 
 ```
-  ./capture-radio.sh -t [radio_tag] -d [capture duration in seconds]
+  ./capture-radio.sh -t [radio_tag] -d [capture duration]
 ```
 
-  if the radio's playlist has more than one stream, will show them instead of starting
+  if the radio's playlist has many streams, will show them instead of starting
 
 - launch capture of a defined radio's stream :
 
 ```
-  ./capture-radio.sh -t [radio_tag] -d [capture duration in seconds] -s [stream_number]
+  ./capture-radio.sh -t [radio_tag] -d [capture duration] -s [stream_number]
 ```
 
 
