@@ -506,7 +506,7 @@ if [ -n "${CAPTURE_TIME}" ]; then
   # (seconds if no unit)
   if [[ ! ${CAPTURE_TIME} =~ ^[0-9]+[hms]?$ ]]; then
     _echo_fail "capture time is invalid, check help"
-    return 1
+    exit 1
   else
     # set the unit to seconds if nothing, only for debug output about time to capture
     [[ ${CAPTURE_TIME} =~ ^[0-9]+$ ]] && CAPTURE_TIME=${CAPTURE_TIME}s
